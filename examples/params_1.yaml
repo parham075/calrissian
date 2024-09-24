@@ -1,0 +1,3 @@
+input_reference:
+  - "s3://drop-bucket/a.zip"
+  - "https://sentinel-2-catalog"

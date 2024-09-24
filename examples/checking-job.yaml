@@ -1,0 +1,44 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: logging-analysis
+spec:
+  ttlSecondsAfterFinished: 60
+  template:
+    spec:
+      serviceAccountName: calrissian-sa
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: calrissian
+          image: ghcr.io/duke-gcb/calrissian/calrissian:0.16.0
+          command:
+            - "sh"
+            - "-c"
+            - "more /inputs/* | cat"
+          volumeMounts:
+            - name: calrissian-volume
+              mountPath: /calrissian
+            - name: params-volume
+              mountPath: /inputs
+            - name: app-package-volume
+              mountPath: /app-package
+          env:
+            - name: CALRISSIAN_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+      restartPolicy: Never
+      volumes:
+        - name: calrissian-volume
+          persistentVolumeClaim:
+            claimName: calrissian-claim 
+        - name: params-volume
+          configMap:
+            name: params  
+        - name: app-package-volume
+          configMap:
+            name: app-package
+  backoffLimit: 3
